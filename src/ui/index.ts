@@ -1,1 +1,6 @@
 export * from './button'
+export * from './input'
+export * from './label'
+export * from './navigation-menu'
+export * from './RichText'
+export * from './select'

@@ -11,16 +11,18 @@ export interface Config {
     users: UserAuthOperations;
   };
   collections: {
-    users: User;
+    pages: Page;
     media: Media;
+    users: User;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -63,24 +65,26 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
+ * via the `definition` "pages".
  */
-export interface User {
+export interface Page {
   id: number;
-  name: string;
-  firstName: string;
-  lastName?: string | null;
-  role: 'admin' | 'maintainer' | 'editor';
+  title: string;
+  slug: string;
+  layout?: ('default' | 'banner' | 'banner-form' | 'slider-form') | null;
+  showBanner?: boolean | null;
+  bannerTitle: string;
+  bannerDescription: string;
+  meta?: {};
+  headerVisible?: boolean | null;
+  footerVisible?: boolean | null;
+  startPublishDate: string;
+  endPublishDate?: string | null;
+  redirectToUrl?: (number | null) | Page;
+  publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  password?: string | null;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -103,18 +107,43 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name: string;
+  firstName: string;
+  lastName?: string | null;
+  role: 'admin' | 'maintainer' | 'editor';
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  password?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'pages';
+        value: number | Page;
       } | null)
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -160,22 +189,25 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
+ * via the `definition` "pages_select".
  */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  firstName?: T;
-  lastName?: T;
-  role?: T;
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  layout?: T;
+  showBanner?: T;
+  bannerTitle?: T;
+  bannerDescription?: T;
+  meta?: T | {};
+  headerVisible?: T;
+  footerVisible?: T;
+  startPublishDate?: T;
+  endPublishDate?: T;
+  redirectToUrl?: T;
+  publishedAt?: T;
   updatedAt?: T;
   createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -194,6 +226,25 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  firstName?: T;
+  lastName?: T;
+  role?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -234,21 +285,21 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface AppHeader {
   id: number;
   logo?: (number | null) | Media;
-  navItems?:
+  navLinks?:
     | {
         disabled?: boolean | null;
         isExternal?: boolean | null;
         label: string;
-        externalLink?: string | null;
-        link?: string | null;
-        appearance?: ('single' | 'dropdown' | 'navigation') | null;
+        href?: string | null;
+        page?: (number | null) | Page;
+        appearance?: ('dropdown' | 'single' | 'navigation') | null;
         childrens?:
           | {
-              disabled?: boolean | null;
+              childDisabled?: boolean | null;
               isExternal?: boolean | null;
-              label: string;
-              externalLink?: string | null;
-              link?: string | null;
+              childLabel: string;
+              childHref?: string | null;
+              childPage?: (number | null) | Page;
               id?: string | null;
             }[]
           | null;
@@ -273,23 +324,23 @@ export interface AppHeader {
  */
 export interface AppHeaderSelect<T extends boolean = true> {
   logo?: T;
-  navItems?:
+  navLinks?:
     | T
     | {
         disabled?: T;
         isExternal?: T;
         label?: T;
-        externalLink?: T;
-        link?: T;
+        href?: T;
+        page?: T;
         appearance?: T;
         childrens?:
           | T
           | {
-              disabled?: T;
+              childDisabled?: T;
               isExternal?: T;
-              label?: T;
-              externalLink?: T;
-              link?: T;
+              childLabel?: T;
+              childHref?: T;
+              childPage?: T;
               id?: T;
             };
         id?: T;

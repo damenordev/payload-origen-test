@@ -6,8 +6,8 @@ import { Header } from '@/components'
 
 export default async function RootLayout({ children }: ILayout) {
   return (
-    <html className="w-full overflow-x-hidden">
-      <body className={cn('relative min-h-screen w-full bg-background text-foreground overflow-x-hidden', getFontsVariables())}>
+    <html>
+      <body className={cn('', getFontsVariables())}>
         <Header />
         <>{children}</>
       </body>

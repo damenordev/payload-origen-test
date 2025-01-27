@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-export const Users: CollectionConfig = {
+export const UserCollection: CollectionConfig = {
   slug: 'users',
   admin: {
     listSearchableFields: ['email', 'name', 'firstName'],

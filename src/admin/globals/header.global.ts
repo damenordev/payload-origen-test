@@ -76,139 +76,6 @@ const navAction: Field = {
   ],
 }
 
-interface ILinkFieldOptions<T> {
-  appearance?: T extends string[] ? T : never
-  disabled?: boolean
-  isExternal?: boolean
-}
-
-function linkField<T>(name: string, { appearance, disabled, isExternal }: ILinkFieldOptions<T>): Field {
-  return {
-    name,
-    type: 'array',
-    fields: [
-      {
-        type: 'row',
-        fields: [
-          {
-            name: 'disabled',
-            type: 'checkbox',
-            label: 'Deshabilitado',
-            defaultValue: disabled,
-            admin: { width: 'fit-content' },
-          },
-          {
-            name: 'isExternal',
-            type: 'checkbox',
-            label: 'Es una URL externa',
-            defaultValue: isExternal,
-            admin: { width: 'fit-content' },
-          },
-        ],
-      },
-      {
-        type: 'row',
-        fields: [
-          {
-            name: 'label',
-            type: 'text',
-            label: 'Label',
-            required: true,
-          },
-          {
-            name: 'externalLink',
-            type: 'text',
-            label: 'Dirección URL',
-            required: true,
-            admin: {
-              condition: (_, siblingData) => siblingData.isExternal,
-            },
-          },
-          {
-            name: 'link',
-            type: 'text',
-            label: 'Dirección URL (page)',
-            required: true,
-            admin: {
-              condition: (_, siblingData) => !siblingData.isExternal,
-            },
-          },
-          {
-            name: 'appearance',
-            type: 'select',
-            label: 'Apariencia',
-            defaultValue: 'dropdown',
-            options: appearance || [],
-            admin: { width: 'fit-content' },
-          },
-        ],
-      },
-      {
-        type: 'row',
-        admin: {
-          condition: (_, siblingData) => siblingData.appearance !== 'single',
-        },
-        fields: [
-          {
-            name: 'childrens',
-            type: 'array',
-            fields: [
-              {
-                type: 'row',
-                fields: [
-                  {
-                    name: 'disabled',
-                    type: 'checkbox',
-                    label: 'Deshabilitado',
-                    defaultValue: disabled,
-                    admin: { width: 'fit-content' },
-                  },
-                  {
-                    name: 'isExternal',
-                    type: 'checkbox',
-                    label: 'Es una URL externa',
-                    defaultValue: isExternal,
-                    admin: { width: 'fit-content' },
-                  },
-                ],
-              },
-              {
-                type: 'row',
-                fields: [
-                  {
-                    name: 'label',
-                    type: 'text',
-                    label: 'Label',
-                    required: true,
-                  },
-                  {
-                    name: 'externalLink',
-                    type: 'text',
-                    label: 'Dirección URL',
-                    required: true,
-                    admin: {
-                      condition: (_, siblingData) => siblingData.isExternal,
-                    },
-                  },
-                  {
-                    name: 'link',
-                    type: 'text',
-                    label: 'Dirección URL (page)',
-                    required: true,
-                    admin: {
-                      condition: (_, siblingData) => !siblingData.isExternal,
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  }
-}
-
 export const revalidateHeader: GlobalAfterChangeHook = ({ doc, req: { payload, context } }) => {
   if (!context.disableRevalidate) {
     payload.logger.info(`Revalidating header`)
@@ -226,7 +93,133 @@ export const HeaderGlobal: GlobalConfig = {
       type: 'upload',
       relationTo: 'media',
     },
-    linkField('navItems', { appearance: ['single', 'dropdown', 'navigation'] }),
+    {
+      name: 'navLinks',
+      type: 'array',
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'disabled',
+              type: 'checkbox',
+              label: 'Deshabilitado',
+              admin: { width: 'fit-content' },
+            },
+            {
+              name: 'isExternal',
+              type: 'checkbox',
+              label: 'Es una URL externa',
+              admin: { width: 'fit-content' },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'label',
+              type: 'text',
+              label: 'Label',
+              required: true,
+            },
+            {
+              name: 'href',
+              type: 'text',
+              label: 'Dirección URL',
+              required: true,
+              admin: {
+                condition: (_, siblingData) => siblingData.isExternal && siblingData.appearance === 'single',
+              },
+            },
+            {
+              name: 'page',
+              type: 'relationship',
+              relationTo: 'pages',
+              label: 'Página',
+              required: true,
+              admin: {
+                condition: (_, siblingData) => !siblingData.isExternal && siblingData.appearance === 'single',
+              },
+            },
+            {
+              name: 'appearance',
+              type: 'select',
+              label: 'Apariencia',
+              defaultValue: 'dropdown',
+              options: ['dropdown', 'single', 'navigation'],
+              admin: { width: 'fit-content' },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          admin: {
+            condition: (_, siblingData) => siblingData.appearance !== 'single',
+          },
+          fields: [
+            {
+              name: 'childrens',
+              type: 'array',
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'childDisabled',
+                      type: 'checkbox',
+                      label: 'Deshabilitado',
+                      admin: { width: 'fit-content' },
+                    },
+                    {
+                      name: 'isExternal',
+                      type: 'checkbox',
+                      label: 'Es una URL externa',
+                      admin: { width: 'fit-content' },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'childLabel',
+                      type: 'text',
+                      label: 'Label',
+                      required: true,
+                      validate: (value: any) => {
+                        console.log({ value })
+                        if (value === 'test') return 'testing validation!'
+                        return true
+                      },
+                    },
+                    {
+                      name: 'childHref',
+                      type: 'text',
+                      label: 'Dirección URL',
+                      required: true,
+                      admin: {
+                        condition: (_, siblingData) => siblingData.isExternal,
+                      },
+                    },
+                    {
+                      name: 'childPage',
+                      type: 'relationship',
+                      relationTo: 'pages',
+                      label: 'Página',
+                      required: true,
+                      admin: {
+                        condition: (_, siblingData) => !siblingData.isExternal,
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
     navAction,
   ],
   hooks: {
