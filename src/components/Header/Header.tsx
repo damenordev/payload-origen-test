@@ -629,8 +629,6 @@ export const Header = async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const logo: any = appHeader?.logo || null
 
-  console.log(navLinks)
-
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
       <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4 p-3">
