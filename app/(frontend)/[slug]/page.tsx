@@ -41,6 +41,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   return (
     <main>
       <HeroSimpleBlock
+        // @ts-expect-error heroImage is a Media type
         imgUrl={page?.heroImage?.url || ''}
         title={page?.heroTitle || ''}
       />

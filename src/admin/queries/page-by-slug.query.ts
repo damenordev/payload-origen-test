@@ -15,10 +15,5 @@ export const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
     where: { slug: { equals: slug } },
   })
 
-  const heroImage = await payload.find({
-    collection: 'media',
-    where: { id: { equals: result.docs?.[0]?.heroImage } },
-  })
-
-  return { ...result.docs?.[0], heroImage: heroImage.docs?.[0] }
+  return { ...result.docs?.[0] }
 })
