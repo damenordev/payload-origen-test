@@ -187,11 +187,6 @@ export const HeaderGlobal: GlobalConfig = {
                       type: 'text',
                       label: 'Label',
                       required: true,
-                      validate: (value: any) => {
-                        console.log({ value })
-                        if (value === 'test') return 'testing validation!'
-                        return true
-                      },
                     },
                     {
                       name: 'childHref',

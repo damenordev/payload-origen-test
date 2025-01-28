@@ -2,7 +2,7 @@ import { Input, Button, Select, SelectTrigger, SelectValue, SelectContent, Selec
 
 export const FormScheduleAppointment = () => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
+    <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
       <h2 className="text-2xl text-primary text-center font-bold mb-6">Pide cita gratis</h2>
       <form className="space-y-6">
         <div>

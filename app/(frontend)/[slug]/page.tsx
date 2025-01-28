@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import { cache } from 'react'
 import configPromise from '@payload-config'
 import { ILayout } from '@/types'
+import RichText from '@/ui/RichText'
 
 interface IHeroSimpleBlockProps {
   imgUrl: string
@@ -18,7 +19,8 @@ const HeroSimpleBlock = ({ imgUrl, title }: IHeroSimpleBlockProps) => {
           style={{ backgroundImage: `url(${imgUrl})` }}
         />
       )}
-      <h2 className="bg-black py-8 px-12 md:px-24 lg:px-64 text-white text-4xl lg:text-5xl font-bold text-center text-balance md:w-fit md:max-w-96 md:mx-auto md:absolute md:bottom-0 md:left-0 md:right-0">
+      {/* Indicar que maximo 3 lineas */}
+      <h2 className="bg-black py-8 px-8 md:px-24 lg:px-64 text-white text-2xl md:text-4xl lg:text-5xl font-bold text-center text-balance md:w-fit md:max-w-screen-2xl md:mx-auto md:absolute md:bottom-0 md:left-0 md:right-0">
         {title}
       </h2>
     </section>
@@ -30,10 +32,14 @@ const dataHeroSimpleBlock = {
   title: 'Emociones y Regulación Emocional',
 }
 
-const ContainerWithStickyForm = () => {
+interface IContainerWithStickyFormProps {
+  children: React.ReactNode
+}
+
+const ContainerWithStickyForm = ({ children }: IContainerWithStickyFormProps) => {
   return (
     <div className="container mx-auto max-w-screen-xl grid md:grid-cols-[1fr_360px] md:gap-8 py-20 px-6 lg:px-0">
-      <div className="prose max-w-none">
+      {/* <div className="prose max-w-none">
         <h1 className="text-3xl font-bold mb-6 text-primary">¿Qué son las emociones?</h1>
 
         <p className="text-lg mb-6">
@@ -86,7 +92,8 @@ const ContainerWithStickyForm = () => {
             <li>Facilitan nuestra comunicación con los demás</li>
           </ul>
         </div>
-      </div>
+      </div> */}
+      {children}
       <aside className="md:sticky md:top-28 h-fit">
         <FormScheduleAppointment />
       </aside>
@@ -105,25 +112,39 @@ const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
     limit: 1,
     pagination: false,
     overrideAccess: draft,
-    where: {
-      slug: {
-        equals: slug,
+    populate: {
+      media: {
+        alt: true,
+        url: true,
       },
     },
+    where: { slug: { equals: slug } },
   })
 
-  return result.docs?.[0] || null
+  const heroImage = await payload.find({
+    collection: 'media',
+    where: { id: { equals: result.docs?.[0]?.heroImage } },
+  })
+
+  return { ...result.docs?.[0], heroImage: heroImage.docs?.[0] } || null
 })
 
 export default async function HomePage({ params }: ILayout<{ slug: string }>) {
   const { slug } = await params
   const page = await queryPageBySlug({ slug })
-  console.log({ page })
 
   return (
     <main>
-      <HeroSimpleBlock {...dataHeroSimpleBlock} />
-      <ContainerWithStickyForm />
+      <HeroSimpleBlock
+        imgUrl={(page?.heroImage as any)?.url}
+        title={page?.heroTitle}
+      />
+      {/* <ContainerWithStickyForm /> */}
+      {page?.content && (
+        <ContainerWithStickyForm>
+          <RichText data={page?.content} />
+        </ContainerWithStickyForm>
+      )}
       <Footer />
     </main>
   )

@@ -1,7 +1,8 @@
-import { CollectionAfterChangeHook, CollectionBeforeChangeHook, CollectionConfig } from 'payload'
+import { CollectionAfterChangeHook, CollectionBeforeChangeHook, CollectionConfig, DateField, Field } from 'payload'
 import { MetaDescriptionField, MetaImageField, MetaTitleField, OverviewField, PreviewField } from '@payloadcms/plugin-seo/fields'
 import { Page } from '@/payload-types'
 import { revalidatePath, revalidateTag } from 'next/cache'
+import { FixedToolbarFeature, HeadingFeature, InlineToolbarFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 
 export const revalidatePage: CollectionAfterChangeHook<Page> = ({ doc, previousDoc, req: { payload, context } }) => {
   if (!context.disableRevalidate) {
@@ -30,66 +31,121 @@ export const populatePublishedAt: CollectionBeforeChangeHook = ({ data, operatio
   return data
 }
 
+interface IFieldDatetimeArgs extends Omit<DateField, 'type'> {}
+
+const fieldDatetime = ({ name, ...args }: IFieldDatetimeArgs): Field => ({
+  admin: {
+    ...args.admin,
+    date: { displayFormat: 'DD/MM/YYYY - HH:mm', pickerAppearance: 'dayAndTime', ...args.admin?.date },
+  },
+  ...args,
+  name,
+  type: 'date',
+})
+
 export const PageCollection: CollectionConfig = {
   slug: 'pages',
+  access: {
+    read: () => true,
+  },
+  admin: {
+    useAsTitle: 'title',
+  },
   defaultPopulate: {
     title: true,
     slug: true,
   },
   fields: [
     {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'slug',
-      type: 'text',
-      required: true,
+      type: 'row',
+      fields: [
+        { name: 'title', label: 'Título de la página', type: 'text', required: true },
+        { name: 'slug', label: 'Slug', type: 'text', required: true },
+      ],
     },
     {
       name: 'layout',
       type: 'select',
+      label: 'Tipo de página',
+      options: [{ label: 'Contenido con formulario', value: 'content-form' }],
+      defaultValue: 'content-form',
+    },
+    {
+      name: 'formType',
+      type: 'select',
+      label: 'Tipo de formulario',
+      defaultValue: 'appointment',
       options: [
-        { label: 'Predeterminado', value: 'default' },
-        { label: 'Banner', value: 'banner' },
-        { label: 'Banner con formulario', value: 'banner-form' },
-        { label: 'Slider y formulario', value: 'slider-form' },
+        { label: 'Pedir cita', value: 'appointment' },
+        { label: 'Contactar', value: 'contact' },
       ],
-      defaultValue: 'default',
+      admin: {
+        condition: (_, siblingData) => siblingData.layout === 'banner-form' || siblingData.layout === 'slider-form',
+      },
+    },
+    { name: 'heroTitle', type: 'text', label: 'Título del hero', required: true },
+    { name: 'heroImage', type: 'upload', label: 'Imagen del hero', relationTo: 'media', required: true },
+    {
+      type: 'collapsible',
+      label: 'Contenido',
+      fields: [
+        {
+          name: 'content',
+          type: 'richText',
+          editor: lexicalEditor({
+            features: ({ rootFeatures }) => {
+              return [...rootFeatures, HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4'] }), FixedToolbarFeature(), InlineToolbarFeature()]
+            },
+            admin: {
+              hideGutter: true,
+              placeholder: 'Añade contenido a la página',
+            },
+          }),
+          label: false,
+        },
+      ],
     },
     {
       type: 'tabs',
       admin: {
-        condition: (_, siblingData) => siblingData.layout === 'banner' || siblingData.layout === 'banner-form',
+        position: 'sidebar',
       },
       tabs: [
         {
-          label: 'Banner principal',
+          label: 'Configuración',
           fields: [
             {
-              name: 'showBanner',
-              label: 'Mostrar banner',
+              name: 'headerVisible',
+              label: 'Mostrar cabecera',
               type: 'checkbox',
               defaultValue: true,
+              admin: { width: 'fit-content' },
             },
             {
-              name: 'bannerTitle',
-              type: 'text',
-              label: 'Título',
-              required: true,
+              name: 'footerVisible',
+              label: 'Mostrar pie de página',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: { width: 'fit-content' },
             },
             {
-              name: 'bannerDescription',
-              type: 'textarea',
-              label: 'Descripción',
+              type: 'row',
+              fields: [
+                fieldDatetime({ name: 'startPublishDate', label: 'Fecha de inicio de publicación', defaultValue: new Date(), required: true }),
+                fieldDatetime({ name: 'endPublishDate', label: 'Fecha de fin de publicación (opcional)' }),
+              ],
+            },
+            {
+              name: 'redirectToUrl',
+              type: 'relationship',
+              label: 'Redirigir a página cuando no esté publicada',
+              relationTo: 'pages',
               required: true,
+              admin: {
+                condition: (_, siblingData) => siblingData.endPublishDate || new Date(siblingData.startPublishDate) > new Date(),
+              },
             },
           ],
-        },
-        {
-          label: 'Contenido',
-          fields: [],
         },
         {
           name: 'meta',
@@ -110,60 +166,7 @@ export const PageCollection: CollectionConfig = {
             // }),
           ],
         },
-        {
-          label: 'Configuración',
-          fields: [
-            {
-              type: 'row',
-              fields: [
-                {
-                  name: 'headerVisible',
-                  type: 'checkbox',
-                  defaultValue: true,
-                  admin: { width: 'fit-content' },
-                },
-                {
-                  name: 'footerVisible',
-                  type: 'checkbox',
-                  defaultValue: true,
-                  admin: { width: 'fit-content' },
-                },
-              ],
-            },
-            {
-              type: 'row',
-              fields: [
-                {
-                  name: 'startPublishDate',
-                  type: 'date',
-                  defaultValue: new Date(),
-                  required: true,
-                },
-                {
-                  name: 'endPublishDate',
-                  type: 'date',
-                },
-                {
-                  name: 'redirectToUrl',
-                  type: 'relationship',
-                  relationTo: 'pages',
-                  required: true,
-                  admin: {
-                    condition: (_, siblingData) => siblingData.endPublishDate || siblingData.startPublishDate > new Date(),
-                  },
-                },
-              ],
-            },
-          ],
-        },
       ],
-    },
-    {
-      name: 'publishedAt',
-      type: 'date',
-      admin: {
-        position: 'sidebar',
-      },
     },
   ],
   hooks: {
@@ -173,9 +176,9 @@ export const PageCollection: CollectionConfig = {
   },
   versions: {
     drafts: {
-      // autosave: {
-      //   interval: 100, // We set this interval for optimal live preview
-      // },
+      autosave: {
+        interval: 100, // We set this interval for optimal live preview
+      },
     },
     maxPerDoc: 50,
   },

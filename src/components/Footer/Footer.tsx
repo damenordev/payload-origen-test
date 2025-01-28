@@ -172,7 +172,7 @@ export const Footer = () => {
           </ul>
         </div>
       </div>
-      <div className="flex items-center justify-center gap-12 pt-12">
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 pt-12">
         <img
           className="h-14"
           src="https://clinicasorigen.es/wp-content/uploads/2021/05/alfonso.png"

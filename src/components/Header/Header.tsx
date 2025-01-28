@@ -13,6 +13,7 @@ import {
   TButtonVariant,
 } from '@/ui'
 import { getCachedGlobal } from '@/utils'
+import { cn } from '@/styles'
 
 const navLinksDefault = [
   {
@@ -623,24 +624,26 @@ const navLinksDefault = [
 export const Header = async () => {
   const appHeader: AppHeader = await getCachedGlobal('app-header', 1)()
 
-  // const navLinks = appHeader?.navLinks || []
-  const navLinks = navLinksDefault
+  const navLinks = appHeader?.navLinks || []
+  // const navLinks = navLinksDefault
   const navActions = appHeader?.navActions || []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const logo: any = appHeader?.logo || null
 
+  console.log({ logo, appHeader })
+
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
-      <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4 p-3">
+      <div className="fixed bottom-4 right-4 z-50 bg-primary text-primary-foreground rounded-full p-2 shadow-xl lg:hidden">
+        <Menu className="size-7" />
+      </div>
+      <div className="max-w-screen-xl mx-auto flex items-center justify-center lg:justify-between gap-4 p-3">
         <div className="flex items-center gap-4">
-          <div className="fixed bottom-4 right-4 z-50 bg-primary text-primary-foreground rounded-full p-2 shadow-xl lg:hidden">
-            <Menu className="size-6" />
-          </div>
           {logo && (
             <img
-              className="h-12"
-              // src={logo?.url}
-              src="https://clinicasorigen.es/wp-content/uploads/2023/03/cropped-cropped-cropped-logo-1-1-1.png"
+              className="h-16 lg:h-14"
+              src={logo?.url}
+              // src="https://clinicasorigen.es/wp-content/uploads/2023/03/cropped-cropped-cropped-logo-1-1-1.png"
               alt={logo?.alt}
             />
           )}
@@ -657,12 +660,14 @@ export const Header = async () => {
                     <NavigationMenuItem className="px-0">
                       <NavigationMenuTrigger className="p-0 text-sm font-normal">{item.label}</NavigationMenuTrigger>
                       <NavigationMenuContent className="flex flex-col">
-                        {item?.childrens?.map(({ childDisabled, isExternal, childLabel, childHref, id }) => (
+                        {item?.childrens?.map(({ childDisabled, isExternal, childLabel, childHref, childPage, id }) => (
                           <NavigationMenuLink
                             key={id}
-                            // href={childHref || (typeof childPage === 'object' ? childPage?.slug : '') || ''}
-                            href={childHref}
-                            className={`text-sm text-nowrap px-3 py-1.5 hover:bg-primary hover:text-primary-foreground ${childDisabled ? 'pointer-events-none opacity-50' : ''}`}
+                            href={childHref || (typeof childPage === 'object' ? childPage?.slug : '') || ''}
+                            // href={childHref}
+                            className={cn('text-sm text-nowrap px-3 py-1.5 hover:bg-primary hover:text-primary-foreground cursor-pointer', {
+                              'pointer-events-none opacity-50': childDisabled,
+                            })}
                             target={isExternal ? '_blank' : undefined}
                           >
                             {childLabel}
@@ -702,7 +707,8 @@ export const Header = async () => {
               <Link
                 className="text-sm cursor-pointer hover:underline"
                 key={item.id}
-                href={item.label || ''}
+                href={item.href || ''}
+                target={item.isExternal ? '_blank' : undefined}
               >
                 {item.label}
               </Link>
@@ -710,17 +716,19 @@ export const Header = async () => {
             // }
           })}
         </nav>
-        <div className="flex items-center gap-2">
-          {navActions.map(action => (
-            <Button
-              key={action.label}
-              size="sm"
-              variant={action.variant as TButtonVariant}
-            >
-              {action.label}
-            </Button>
-          ))}
-        </div>
+        {navActions.length > 0 && (
+          <div className="hidden lg:flex items-center gap-2">
+            {navActions.map(action => (
+              <Button
+                key={action.label}
+                size="sm"
+                variant={action.variant as TButtonVariant}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
     </header>
   )

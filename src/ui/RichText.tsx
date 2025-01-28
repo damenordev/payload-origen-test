@@ -63,15 +63,16 @@ type Props = {
 } & React.HTMLAttributes<HTMLDivElement>
 
 export default function RichText(props: Props) {
-  const { className, enableProse = true, enableGutter = true, ...rest } = props
+  const { className, enableProse = true, enableGutter = false, ...rest } = props
   return (
     <RichTextWithoutBlocks
       converters={jsxConverters}
       className={cn(
+        'prose-h1:text-primary prose-h2:text-primary prose-headings:mb-2 prose-headings:mt-4 prose-h1:mb-3 prose-h1:mt-6 prose-h2:mb-3 prose-h2:mt-6',
         {
           'container ': enableGutter,
           'max-w-none': !enableGutter,
-          'mx-auto prose md:prose-md dark:prose-invert ': enableProse,
+          'mx-auto prose md:prose-md dark:prose-invert leading-normal': enableProse,
         },
         className
       )}

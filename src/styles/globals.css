@@ -8,6 +8,7 @@
 @variant dark (&:where(.dark, .dark *));
 
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-background: var(--color-neutral-50);
