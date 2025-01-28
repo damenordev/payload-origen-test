@@ -7,12 +7,9 @@ const dirname = path.dirname(filename)
 
 export const MediaCollection: CollectionConfig = {
   slug: 'media',
-  // access: {
-  //   read: () => true,
-  //   delete: () => false,
-  //   create: () => false,
-  //   update: () => false,
-  // },
+  access: {
+    read: () => true,
+  },
   defaultPopulate: {
     alt: true,
     url: true,
