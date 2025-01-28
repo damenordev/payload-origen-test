@@ -3,30 +3,22 @@ import { getPayload } from 'payload'
 import { cache } from 'react'
 import configPromise from '@payload-config'
 
-const queryPage = cache(async () => {
+export const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
   const { isEnabled: draft } = await draftMode()
-
   const payload = await getPayload({ config: configPromise })
-
   const result = await payload.find({
     collection: 'pages',
     draft,
     limit: 1,
     pagination: false,
     overrideAccess: draft,
+    where: { slug: { equals: slug } },
   })
 
-  return result.docs?.[0] || null
+  const heroImage = await payload.find({
+    collection: 'media',
+    where: { id: { equals: result.docs?.[0]?.heroImage } },
+  })
+
+  return { ...result.docs?.[0], heroImage: heroImage.docs?.[0] }
 })
-
-export default async function HomePage() {
-  const page = await queryPage()
-
-  console.log({ page })
-
-  return (
-    <main>
-      <h2>Home</h2>
-    </main>
-  )
-}
