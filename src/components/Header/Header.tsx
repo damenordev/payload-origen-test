@@ -4,16 +4,24 @@ import { Menu } from 'lucide-react'
 import { AppHeader } from '@/payload-types'
 import {
   Button,
+  NavbarLinks,
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
   TButtonVariant,
 } from '@/ui'
 import { getCachedGlobal } from '@/utils'
 import { cn } from '@/styles'
+import Image from 'next/image'
 
 const navLinksDefault = [
   {
@@ -630,22 +638,78 @@ export const Header = async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const logo: any = appHeader?.logo || null
 
-  console.log({ logo, appHeader })
+  const navLinksAdapter = navLinks.map(item => {
+    if (item.childrens && item.childrens.length > 0 && item.appearance !== 'single') {
+      return {
+        label: item.label,
+        childrens: item.childrens.map(child => ({
+          label: child.childLabel,
+          href: child.childPage ? (typeof child.childPage === 'number' ? '' : child.childPage.slug) : child.childHref,
+        })),
+      }
+    }
+    return { label: item.label, href: item.href }
+  })
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
-      <div className="fixed bottom-4 right-4 z-50 bg-primary text-primary-foreground rounded-full p-2 shadow-xl lg:hidden">
-        <Menu className="size-7" />
+      <div className="fixed bottom-4 right-4 z-50 lg:hidden">
+        <Sheet>
+          <SheetTrigger>
+            <div className="bg-primary text-primary-foreground rounded-full p-2 shadow-xl">
+              <Menu className="size-7" />
+            </div>
+          </SheetTrigger>
+          <SheetContent
+            side="left"
+            className="p-3 lg:hidden"
+          >
+            <SheetHeader>
+              <SheetTitle>
+                {logo && (
+                  <div className="relative w-40 aspect-video">
+                    <Image
+                      className="object-contain"
+                      src={`https://aj4ua9kovy.ufs.sh/f/${logo?._key}`}
+                      alt={logo?.alt}
+                      fill
+                    />
+                  </div>
+                )}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="h-[calc(100vh-120px)] flex flex-col gap-4">
+              <div className="flex-1">
+                <NavbarLinks links={navLinksAdapter} />
+              </div>
+              {navActions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {navActions.map(action => (
+                    <Button
+                      key={action.label}
+                      size="sm"
+                      variant={action.variant as TButtonVariant}
+                    >
+                      {action.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
       <div className="max-w-screen-xl mx-auto flex items-center justify-center lg:justify-between gap-4 p-3">
         <div className="flex items-center gap-4">
           {logo && (
-            <img
-              className="h-16 lg:h-14"
-              src={logo?.url}
-              // src="https://clinicasorigen.es/wp-content/uploads/2023/03/cropped-cropped-cropped-logo-1-1-1.png"
-              alt={logo?.alt}
-            />
+            <div className="relative w-32 h-14 lg:h-16">
+              <Image
+                className="object-contain"
+                src={`https://aj4ua9kovy.ufs.sh/f/${logo?._key}`}
+                alt={logo?.alt}
+                fill
+              />
+            </div>
           )}
         </div>
         <nav className="hidden lg:flex items-center gap-4">
@@ -678,31 +742,7 @@ export const Header = async () => {
                   </NavigationMenuList>
                 </NavigationMenu>
               )
-              // return (
-              //   <div
-              //     key={item.id}
-              //     className="group relative"
-              //   >
-              //     <div className="flex items-center">
-              //       <div className="text-sm leading-none">{item.label}</div>
-              //       <ChevronDownIcon className="size-4 mt-1" />
-              //     </div>
-              //     <div className="hidden group-active:flex group-hover:flex absolute top-6 left-0 bg-card border border-gray-200 rounded-md w-fit p-3 flex-col gap-2">
-              //       {item?.childrens?.map(({ childDisabled, isExternal, childLabel, childHref, childPage, id }) => (
-              //         <Link
-              //           key={id}
-              //           href={childHref || (typeof childPage === 'object' ? childPage?.slug : '') || ''}
-              //           className={`text-sm text-nowrap hover:underline ${childDisabled ? 'pointer-events-none opacity-50' : ''}`}
-              //           target={isExternal ? '_blank' : undefined}
-              //         >
-              //           {childLabel}
-              //         </Link>
-              //       ))}
-              //     </div>
-              //   </div>
-              // )
             }
-            // if (item.appearance === 'single') {
             return (
               <Link
                 className="text-sm cursor-pointer hover:underline"

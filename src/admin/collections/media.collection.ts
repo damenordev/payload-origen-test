@@ -9,11 +9,17 @@ export const MediaCollection: CollectionConfig = {
   slug: 'media',
   access: {
     read: () => true,
+    delete: () => true,
+    create: () => true,
+    update: () => true,
   },
   defaultPopulate: {
     alt: true,
     url: true,
     filename: true,
+    _key: true,
+    width: true,
+    height: true,
   },
   fields: [
     {
